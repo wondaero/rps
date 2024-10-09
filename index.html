@@ -62,9 +62,14 @@
             padding: 10px;
             overflow-y: auto;
         }
-        .btns{
+        footer{
             padding: 10px;
         }
+        footer .footer-top{
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
         .btns > div{
             display: flex;
             align-items: center;
@@ -77,6 +82,9 @@
             border-radius: 5px;
             width: 80px;
             height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border: 0;
             background: #fff;
             color: #fff;
@@ -148,7 +156,7 @@
             justify-content: flex-end;
         }
         .my-chat p{
-            background: #ff0;
+            background: #e8e855;
             border-radius: 5px 0 5px 5px;
             font-weight: 900;
             font-size: 24px;
@@ -174,6 +182,13 @@
             padding: 20px;
             font-size: 30px;
         }
+        .total-score h3{
+            margin: 0;
+        }
+        .total-score h4{
+            margin: 0;
+            margin-top: 20px;
+        }
 
     </style>
 </head>
@@ -184,10 +199,23 @@
         </header>
         <div id="chatLog" class="chat-log"></div>
         <footer>
+            <div class="footer-top">
+                <label>
+                    <strong>배치:</strong>
+                    <select id="arrangeSelect">
+                        <option value="012">✊✌️🖐️</option>
+                        <option value="021">✊🖐️✌️</option>
+                        <option value="102">✌️✊🖐️</option>
+                        <option value="120">✌️🖐️✊</option>
+                        <option value="201">🖐️✊✌️</option>
+                        <option value="210">🖐️✌️✊</option>
+                    </select>
+                </label>
+            </div>
             <div class="btns">
-                <div class="">
-                    <button data-btn="0">✌️</button>
-                    <button data-btn="1">✊</button>
+                <div id="btns">
+                    <button data-btn="0">✊</button>
+                    <button data-btn="1">✌️</button>
                     <button data-btn="2">🖐️</button>
                 </div>
             </div>
@@ -203,9 +231,15 @@
         const gameCnt = 5;
 
         const rpsObj = {
-            0: '✌️',
-            1: '✊',
+            0: '✊',
+            1: '✌️',
             2: '🖐️'
+        }
+
+        const scoreObj = {
+            0: '🔴',
+            1: '🟡',
+            2: '🟢',
         }
 
         let ai = {
@@ -307,21 +341,21 @@
 
         const getScore = () => {
             let score;
-            const winCase = ai.answer === 2 ? 0 : ai.answer + 1;
+            const winCase = ai.answer === 0 ? 2 : ai.answer - 1;
             const answerTime = +(((mine.answerTime - ai.answerTime) * .001).toFixed(3));
 
-            if(winCase === mine.answer) score = '승';
-            else if(ai.answer === mine.answer) score = '무';
-            else score = '패';
+            if(winCase === mine.answer) score = 2;
+            else if(ai.answer === mine.answer) score = 1;
+            else score = 0;
 
                     
-            scoreArr.push({score, answerTime});
+            scoreArr.push({score, answerTime, answer: mine.answer});
 
             const div = document.createElement('div');
             div.classList.add('score');
             div.innerHTML = `
                 <div>
-                    <p>${scoreArr.length}. ${score} ${answerTime}초</p>
+                    <p>${scoreArr.length}. ${scoreObj[score]} ${answerTime}초</p>
                 </div>
             `;
 
@@ -333,19 +367,25 @@
         }
 
         const getTotalScore = () => {
-            const scoreStr = scoreArr.map(s => s.score).join('');
-            console.log(scoreArr.map(s => s.answerTime));
-            console.log(scoreArr.map(s => s.answerTime).reduce((sum, num) => sum + num, 0));
+            const scoreStr = scoreArr.map(s => scoreObj[s.score]).join(' ');
+            const answerStr = scoreArr.map(s => rpsObj[s.answer]).join(' ');
             const avSec = (scoreArr.map(s => s.answerTime).reduce((sum, num) => sum + num, 0) / scoreArr.length).toFixed(3);
 
             const div = document.createElement('div');
             div.classList.add('total-score');
             div.innerHTML = `
-                <h3>${scoreStr}<h3>
-                <h4>${avSec}<h4>
+                <h3>${scoreStr}</h3>
+                <h3>${answerStr}</h3>
+                <h4>${avSec}초</h4>
+            `;
+            const div2 = document.createElement('div');
+            div2.classList.add('score');
+            div2.innerHTML = `
+                <p>AI님이 나가셨습니다.</p>
             `;
 
             document.querySelector('#chatLog').appendChild(div);
+            document.querySelector('#chatLog').appendChild(div2);
 
             autoScroll();
         }
@@ -398,7 +438,21 @@
                 setRPS();
                 freeze(false);
             })
+        })
 
+        document.querySelector('#arrangeSelect').addEventListener('input', (e) => {
+            freeze(true);
+            window.clearTimeout(timeout);
+
+            const val = e.target.value;
+            const btns = document.querySelector('#btns');
+            val.split('').forEach((el) => {
+                const target = btns.querySelector('button[data-btn="' + el + '"]');
+                btns.append(target);
+            })
+
+            setRPS();
+            freeze(false);
         })
 
     </script>
