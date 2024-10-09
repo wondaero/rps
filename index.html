@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가위바위보 순발력 게임</title>
+    <link rel="stylesheet" href="https://wondaero.github.io/assets/css/normalize.css" />
+    <style>
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Medium.woff') format('woff');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-SemiBold.woff') format('woff');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-ExtraBold.woff') format('woff');
+            font-weight: 800;
+            font-style: normal;
+        }
+
+        
+        html, body{height: 100%; margin: 0; padding: 0;}
+        body{font-family: Pretendard;}
+
+        .wrapper{
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        header{
+            background: rgba(98, 98, 98);
+            color: #fff;
+            padding: 10px;
+            font-size: 14px;
+            
+        }
+        header > h1{margin: 0;}
+        .chat-log{
+            flex: 1;
+            background: skyblue;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .btns{
+            padding: 10px;
+        }
+        .btns > div{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 360px;
+            min-width: 260px;
+            margin: 0 auto;
+        }
+        .btns button{
+            border-radius: 5px;
+            width: 80px;
+            height: 80px;
+            border: 0;
+            background: #000;
+            color: #fff;
+            font-size: 30px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, .2);
+            
+        }
+        .btns button:last-of-type{
+            margin-right: 0;
+        }
+
+        .ai-chat{
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+        .ai-icon{
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            overflow: hidden;
+            padding: 5px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, .5);
+            margin-right: 5px;
+
+        }
+        .ai-icon:before,
+        .ai-icon:after{
+            display: block;
+            content: '';
+            border-radius: 50%;
+            position: relative;
+            background: rgb(118, 166, 179);
+            margin: 0 auto;
+        }
+        .ai-icon:before{
+            width: 12px;
+            height: 12px;
+        }
+        .ai-icon:after{
+            position: relative;
+            top: -2px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .ai-chat strong{
+            display: block;
+            margin-bottom: 5px;
+        }
+        .ai-chat p{
+            background: #fff;
+            border-radius: 0 5px 5px 5px;
+            min-width: 50px;
+            margin: 0;
+            padding: 5px;
+        }
+        .ai-chat p span{
+            font-weight: 900;
+            font-size: 24px;
+        }
+
+        .my-chat{
+            display: flex;
+            justify-content: flex-end;
+        }
+        .my-chat p{
+            background: #ff0;
+            border-radius: 5px 0 5px 5px;
+            font-weight: 900;
+            font-size: 24px;
+            margin: 0;
+            padding: 5px;
+        }
+
+        .score p{
+            text-align: center;
+            background: rgba(0, 0, 0, .2);
+            color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .total-score{
+            text-align: center;
+            background: rgba(0, 0, 0, .2);
+            color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 30px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>가위바위보 순발력 게임</h1>
+        </header>
+        <div id="chatLog" class="chat-log"></div>
+        <footer>
+            <div class="btns">
+                <div class="">
+                    <button data-btn="0">가위</button>
+                    <button data-btn="1">바위</button>
+                    <button data-btn="2">보</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const getRandomNum = (mn, mx) => Math.floor(Math.random() * (mx - mn + 1)) + mn;  //나중에 유틸로 뺄 것
+        let timeout;
+        let resVal;
+
+        const scoreArr = [];
+        const gameCnt = 5;
+
+        const rpsObj = {
+            0: '가위',
+            1: '바위',
+            2: '보'
+        }
+
+        let ai = {
+            answer: undefined,
+            answerTime: undefined
+        }
+        
+        let mine = {
+            answer: undefined,
+            answerTime: undefined
+        }
+
+
+        const todo = (cb, delay) => {
+            return new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                    cb();
+                    resolve();
+                }, delay)
+            });
+        }
+
+        const autoScroll = () => {
+            const target = document.querySelector('#chatLog');
+
+            const isScrollable = target.scrollHeight > target.clientHeight;
+
+            if (isScrollable) target.scrollTop = target.scrollHeight;
+        }
+
+
+        
+
+        const  startGame = async () => {
+            await todo(() => {
+                aiChat(`
+                    안녕하세요.<br>
+                    저랑 ${gameCnt}판만 가위바위보 해요.
+                `);
+            }, 500)
+            await todo(() => {
+                aiChat(`
+                    무조건 제가 먼저 낼꺼고<br>
+                    저보다 먼저 내시면 안돼요!
+                `);
+            }, 500)
+            await todo(() => {
+                aiChat(`
+                    제가 눈치채지 못하게끔<br>
+                    최대한 빨리내줘요.<br>
+                `);
+            }, 500);
+            await todo(() => {
+                aiChat(`자 시작할게요!!!!!`);
+            }, 500);
+
+            setRPS();
+        }
+
+        startGame();
+
+        const setRPS = () => {
+            const delay = getRandomNum(2500, 8000);
+            timeout = window.setTimeout(() => {
+                ai.answerTime = new Date();
+                ai.answer = getRandomNum(0, 2);
+                
+                aiChat(`<span>${rpsObj[ai.answer]}!!!</span>`);
+            }, delay);
+        }
+
+        const aiChat = (msg) => {
+            const div = document.createElement('div');
+            div.classList.add('ai-chat');
+            div.innerHTML = `
+                <div class="ai-icon"></div>
+                <div>
+                    <strong>AI</strong>
+                    <p>${msg}</p>
+                </div>
+            `;
+
+            document.querySelector('#chatLog').appendChild(div);
+
+            autoScroll();
+        }
+        const myChat = (msg) => {
+            const div = document.createElement('div');
+            div.classList.add('my-chat');
+            div.innerHTML = `
+                <div><p>${msg}</p></div>
+            `;
+
+            document.querySelector('#chatLog').appendChild(div);
+
+            autoScroll();
+        }
+
+
+        const getScore = () => {
+            let score;
+            const winCase = ai.answer === 2 ? 0 : ai.answer + 1;
+            const answerTime = +(((mine.answerTime - ai.answerTime) * .001).toFixed(3));
+
+            if(winCase === mine.answer) score = '승';
+            else if(ai.answer === mine.answer) score = '무';
+            else score = '패';
+
+                    
+            scoreArr.push({score, answerTime});
+
+            const div = document.createElement('div');
+            div.classList.add('score');
+            div.innerHTML = `
+                <div>
+                    <p>${scoreArr.length}. ${score} ${answerTime}초</p>
+                </div>
+            `;
+
+            document.querySelector('#chatLog').appendChild(div);
+            
+            init1();
+
+            autoScroll();
+        }
+
+        const getTotalScore = () => {
+            const scoreStr = scoreArr.map(s => s.score).join('');
+            console.log(scoreArr.map(s => s.answerTime));
+            console.log(scoreArr.map(s => s.answerTime).reduce((sum, num) => sum + num, 0));
+            const avSec = (scoreArr.map(s => s.answerTime).reduce((sum, num) => sum + num, 0) / scoreArr.length).toFixed(3);
+
+            const div = document.createElement('div');
+            div.classList.add('total-score');
+            div.innerHTML = `
+                <h3>${scoreStr}<h3>
+                <h4>${avSec}<h4>
+            `;
+
+            document.querySelector('#chatLog').appendChild(div);
+
+            autoScroll();
+        }
+
+        const init1 = () => {
+            ai = {
+                answer: undefined,
+                answerTime: undefined
+            }
+            
+            mine = {
+                answer: undefined,
+                answerTime: undefined
+            }
+        }
+
+
+        document.querySelectorAll('[data-btn]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if(scoreArr.length === 5){
+                    if(confirm('다시할까요?')) window.location.reload();
+                    return;
+                }
+
+                if(ai.answer === undefined){
+                    window.clearTimeout(timeout);
+                    alert('제가 먼저 낸다구요!!!!!');
+                    setRPS();
+                    return;
+                }
+
+                mine.answer = +btn.dataset.btn;
+                mine.answerTime = new Date();
+
+                myChat(`${rpsObj[mine.answer]}!!!`);
+
+                getScore();
+
+                if(scoreArr.length === gameCnt){
+                    getTotalScore();
+                    return;
+                }
+
+                setRPS();
+            })
+
+        })
+
+    </script>
+    
+</body>
+</html>
