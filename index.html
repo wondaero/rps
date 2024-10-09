@@ -37,6 +37,8 @@
             font-style: normal;
         }
 
+        body.freeze{pointer-events: none;}
+
         
         html, body{height: 100%; margin: 0; padding: 0;}
         body{font-family: Pretendard;}
@@ -76,10 +78,12 @@
             width: 80px;
             height: 80px;
             border: 0;
-            background: #000;
+            background: #fff;
             color: #fff;
-            font-size: 30px;
+            font-size: 48px;
+            background: #636363;
             box-shadow: 0 3px 5px rgba(0, 0, 0, .2);
+            cursor: pointer;
             
         }
         .btns button:last-of-type{
@@ -93,14 +97,14 @@
             margin-bottom: 10px;
         }
         .ai-icon{
-            border-radius: 5px;
+            border-radius: 50%;
             width: 30px;
             height: 30px;
             overflow: hidden;
             padding: 5px;
             box-sizing: border-box;
             background: rgba(255, 255, 255, .5);
-            margin-right: 5px;
+            margin-right: 10px;
 
         }
         .ai-icon:before,
@@ -136,7 +140,7 @@
         }
         .ai-chat p span{
             font-weight: 900;
-            font-size: 24px;
+            font-size: 80px;
         }
 
         .my-chat{
@@ -150,6 +154,7 @@
             font-size: 24px;
             margin: 0;
             padding: 5px;
+            font-size: 80px;
         }
 
         .score p{
@@ -181,9 +186,9 @@
         <footer>
             <div class="btns">
                 <div class="">
-                    <button data-btn="0">가위</button>
-                    <button data-btn="1">바위</button>
-                    <button data-btn="2">보</button>
+                    <button data-btn="0">✌️</button>
+                    <button data-btn="1">✊</button>
+                    <button data-btn="2">🖐️</button>
                 </div>
             </div>
         </footer>
@@ -198,9 +203,9 @@
         const gameCnt = 5;
 
         const rpsObj = {
-            0: '가위',
-            1: '바위',
-            2: '보'
+            0: '✌️',
+            1: '✊',
+            2: '🖐️'
         }
 
         let ai = {
@@ -357,18 +362,23 @@
             }
         }
 
+        function freeze(bool){
+            document.body.classList[bool ? 'add' : 'remove']('freeze');
+        }
 
         document.querySelectorAll('[data-btn]').forEach(btn => {
             btn.addEventListener('click', () => {
-                if(scoreArr.length === 5){
+                if(scoreArr.length === gameCnt){
                     if(confirm('다시할까요?')) window.location.reload();
                     return;
                 }
-
+                freeze(true);
+                
                 if(ai.answer === undefined){
                     window.clearTimeout(timeout);
                     alert('제가 먼저 낸다구요!!!!!');
                     setRPS();
+                    freeze(false);
                     return;
                 }
 
@@ -381,10 +391,12 @@
 
                 if(scoreArr.length === gameCnt){
                     getTotalScore();
+                    freeze(false);
                     return;
                 }
 
                 setRPS();
+                freeze(false);
             })
 
         })
