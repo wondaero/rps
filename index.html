@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>가위바위보 순발력 게임</title>
     <link rel="stylesheet" href="https://wondaero.github.io/assets/css/normalize.css" />
     <style>
@@ -40,7 +40,7 @@
         body.freeze{pointer-events: none;}
 
         
-        html, body{height: 100%; margin: 0; padding: 0;}
+        html, body{height: 100%; overflow: hidden;}
         body{font-family: Pretendard;}
 
         .wrapper{
@@ -182,12 +182,14 @@
             padding: 20px;
             font-size: 30px;
         }
+        .total-score *{margin: 0;}
         .total-score h3{
-            margin: 0;
+            margin: 10px 0 20px;
         }
         .total-score h4{
-            margin: 0;
-            margin-top: 20px;
+            font-size: 16px;
+            text-align: right;
+            color: rgba(255, 255, 255, .5);
         }
 
     </style>
@@ -226,6 +228,7 @@
         const getRandomNum = (mn, mx) => Math.floor(Math.random() * (mx - mn + 1)) + mn;  //나중에 유틸로 뺄 것
         let timeout;
         let resVal;
+        let usingKeyboard;
 
         const scoreArr = [];
         const gameCnt = 5;
@@ -275,11 +278,22 @@
 
         const  startGame = async () => {
             await todo(() => {
+                const div = document.createElement('div');
+                div.classList.add('score');
+                div.innerHTML = `
+                    <div>
+                        <p>AI님이 당신을 초대했습니다.</p>
+                    </div>
+                `;
+
+                document.querySelector('#chatLog').appendChild(div);
+            }, 500)
+            await todo(() => {
                 aiChat(`
                     안녕하세요.<br>
                     저랑 ${gameCnt}판만 가위바위보 해요.
                 `);
-            }, 500)
+            }, 800)
             await todo(() => {
                 aiChat(`
                     무조건 제가 먼저 낼꺼고<br>
@@ -371,12 +385,15 @@
             const answerStr = scoreArr.map(s => rpsObj[s.answer]).join(' ');
             const avSec = (scoreArr.map(s => s.answerTime).reduce((sum, num) => sum + num, 0) / scoreArr.length).toFixed(3);
 
+            const isKeyboard = !!scoreArr.filter(s => s.type === 'keyboard').length;
+
             const div = document.createElement('div');
             div.classList.add('total-score');
             div.innerHTML = `
                 <h3>${scoreStr}</h3>
                 <h3>${answerStr}</h3>
-                <h4>${avSec}초</h4>
+                <h2>${avSec}초</h2>
+                <h4>${usingKeyboard ? 'by keyboard' : 'by button'}</h4>
             `;
             const div2 = document.createElement('div');
             div2.classList.add('score');
@@ -407,7 +424,20 @@
         }
 
         document.querySelectorAll('[data-btn]').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', e => {
+                if(scoreArr.length && scoreArr.length < 5){
+                    if(usingKeyboard && e.detail > 0){
+                        window.clearTimeout(timeout);
+                        alert('키보드만 사용해주세요.');
+                        setRPS();
+                        return;
+                    }else if(!usingKeyboard && e.detail === 0){
+                        window.clearTimeout(timeout);
+                        alert('버튼만 사용해주세요.');
+                        setRPS();
+                        return;
+                    }
+                }
                 if(scoreArr.length === gameCnt){
                     if(confirm('다시할까요?')) window.location.reload();
                     return;
@@ -437,7 +467,17 @@
 
                 setRPS();
                 freeze(false);
+
+                if(usingKeyboard === undefined && e.detail > 0) usingKeyboard = false;
             })
+        })
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key;
+            if(k !== '1' && k !== '2' && k !== '3') return;
+            document.querySelector('[data-btn="' + (k - 1) + '"]').click();
+
+            if(usingKeyboard === undefined) usingKeyboard = true;
         })
 
         document.querySelector('#arrangeSelect').addEventListener('input', (e) => {
